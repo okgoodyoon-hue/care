@@ -1,38 +1,36 @@
-# Smart Food Calorie App - Blueprint
+# 100-Character Community App - Blueprint
 
 ## Overview
-A modern, AI-inspired web application that helps users track their caloric intake by either capturing a photo of their food or typing a description. Built using standard web technologies (HTML, CSS, JS) with a focus on Web Components and modern CSS features.
+A minimalist micro-blogging community where users can share thoughts in 100 characters or less. Designed for high-impact, short-form communication with a modern "Pulse & Neon" aesthetic.
 
 ## Features
-- **Dual Input Modes:**
-  - **Vision Mode:** Capture or upload a photo of your meal.
-  - **Text Mode:** Type in what you ate (e.g., "A large apple and a slice of cheese").
-- **Smart Analysis (Simulated):** Parses text or images to identify food items and estimate calories.
-- **Nutritional Breakdown:** Provides a breakdown of estimated calories, protein, carbs, and fats.
-- **Recent History:** Saves your recent logs locally for quick reference.
-- **Modern UI:** Responsive design with vibrant colors, smooth transitions, and a premium feel.
+- **100-Char Limit:** Input area with real-time character counting (0/100).
+- **Public Feed:** Vertical scrollable feed of all shared messages, newest first.
+- **Nickname Profiles:** Simple nickname field to identify users.
+- **Unique Avatars:** Each nickname gets a unique `oklch` color background.
+- **Modern UI:** Glassmorphism effects, vibrant neon accents, and smooth entry animations.
+- **Persistence:** Messages are saved to `localStorage` to simulate a live community feed.
 
 ## Technical Stack
-- **Web Components:** Encapsulated UI logic for inputs, cards, and results.
-- **Modern CSS:** Container queries, cascade layers, `:has()` selector, and `oklch` color space.
-- **Vanilla JavaScript:** ES modules, async/await for simulated AI processing.
-- **Storage:** `localStorage` for persisting history.
+- **Web Components:** Encapsulated logic for `<community-app>`, `<post-editor>`, `<message-feed>`, and `<message-card>`.
+- **Modern CSS:** `@layer`, `oklch`, `:has()`, Glassmorphism, and responsive grid layouts.
+- **Vanilla JavaScript:** ES modules, async/await for simulated network delays.
+- **Storage:** `localStorage` for feed persistence.
 
 ## Implementation Plan
-1. **Infrastructure:**
-   - Define a consistent color palette and typography using CSS variables.
-   - Set up the main layout with a focus on mobile-first responsiveness.
+1. **Infrastructure & Theming:**
+   - Define a "Pulse & Neon" palette using `oklch`.
+   - Implement global Glassmorphism and animation styles.
 2. **Web Components:**
-   - `<food-app>`: Root component managing application state.
-   - `<food-input>`: Handles user input (Camera, Upload, Text).
-   - `<calorie-result>`: Displays the results of the analysis.
-   - `<food-history>`: Shows a list of recent entries.
+   - `<post-editor>`: Max 100 char limit, character counter, nickname field.
+   - `<message-feed>`: Feed display logic (reverse chronological).
+   - `<message-card>`: Individual message UI with unique avatars.
 3. **Core Logic:**
-   - Implement `FoodAnalyzer` module to handle mock processing of text and images.
-   - Add camera/file handling logic.
+   - `CommunityStore` module for state management and `localStorage` sync.
+   - Event-driven UI updates for real-time feel.
 4. **Polishing:**
-   - Add animations using CSS transitions and `@keyframes`.
-   - Ensure accessibility with proper ARIA labels and keyboard navigation.
+   - Add entry/exit animations for new messages.
+   - Mobile-first responsive refinements.
 5. **Validation:**
-   - Check for any runtime errors in the console.
-   - Verify responsiveness across different screen sizes.
+   - Verify char limit enforcement.
+   - Check persistence across reloads.

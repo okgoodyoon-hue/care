@@ -1,283 +1,192 @@
-// Mock data for calorie estimation
-const FOOD_DATABASE = {
-  'apple': { kcal: 52, protein: 0.3, carbs: 14, fat: 0.2 },
-  'banana': { kcal: 89, protein: 1.1, carbs: 23, fat: 0.3 },
-  'pizza': { kcal: 266, protein: 11, carbs: 33, fat: 10 },
-  'burger': { kcal: 250, protein: 13, carbs: 31, fat: 9 },
-  'chicken': { kcal: 165, protein: 31, carbs: 0, fat: 3.6 },
-  'rice': { kcal: 130, protein: 2.7, carbs: 28, fat: 0.3 },
-  'salad': { kcal: 15, protein: 1, carbs: 3, fat: 0.1 },
-  'egg': { kcal: 155, protein: 13, carbs: 1.1, fat: 11 },
-  'bread': { kcal: 265, protein: 9, carbs: 49, fat: 3.2 },
-  'milk': { kcal: 42, protein: 3.4, carbs: 5, fat: 1 },
-};
+// --- Community Store (State Management) ---
+class CommunityStore {
+  static STORAGE_KEY = 'community_feed_100';
 
-class FoodAnalyzer {
-  static analyzeText(text) {
-    const tokens = text.toLowerCase().split(/\W+/);
-    const results = [];
-    let totalKcal = 0;
-    
-    tokens.forEach(token => {
-      if (FOOD_DATABASE[token]) {
-        results.push({ name: token, ...FOOD_DATABASE[token] });
-        totalKcal += FOOD_DATABASE[token].kcal;
-      }
-    });
-
-    if (results.length === 0) {
-      // Return a random estimate if no matches found to simulate AI
-      const randomKcal = Math.floor(Math.random() * 300) + 100;
-      return {
-        items: [{ name: text || 'Unknown Meal', kcal: randomKcal, protein: 10, carbs: 20, fat: 5 }],
-        totalKcal: randomKcal
-      };
-    }
-
-    return { items: results, totalKcal };
+  static getMessages() {
+    return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
   }
 
-  static async analyzeImage(canvas) {
-    // In a real app, this would send the image to a Vision API
-    // Here we simulate analysis delay and return a random result
-    return new Promise(resolve => {
-      setTimeout(() => {
-        const foodKeys = Object.keys(FOOD_DATABASE);
-        const randomFood = foodKeys[Math.floor(Math.random() * foodKeys.length)];
-        const result = FOOD_DATABASE[randomFood];
-        resolve({
-          items: [{ name: `Detected ${randomFood}`, ...result }],
-          totalKcal: result.kcal
-        });
-      }, 1500);
-    });
+  static saveMessage(nickname, content) {
+    const messages = this.getMessages();
+    const newMessage = {
+      id: crypto.randomUUID(),
+      nickname: nickname || 'Anonymous',
+      content: content.substring(0, 100),
+      timestamp: new Date().toISOString(),
+      avatarHue: Math.floor(Math.random() * 360)
+    };
+    messages.unshift(newMessage);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(messages.slice(0, 50)));
+    return newMessage;
   }
 }
 
 // --- Web Components ---
 
-class FoodApp extends HTMLElement {
-  constructor() {
-    super();
-    this.state = {
-      currentResult: null,
-      history: JSON.parse(localStorage.getItem('food_history') || '[]'),
-      isAnalyzing: false
-    };
-  }
-
+class CommunityApp extends HTMLElement {
   connectedCallback() {
     this.render();
-    this.addEventListener('food-analyzed', (e) => this.handleAnalysis(e.detail));
+    this.addEventListener('new-message', () => this.updateFeed());
   }
 
-  handleAnalysis(result) {
-    this.state.currentResult = result;
-    this.state.history.unshift({ ...result, timestamp: new Date().toISOString() });
-    this.state.history = this.state.history.slice(0, 10); // Keep last 10
-    localStorage.setItem('food_history', JSON.stringify(this.state.history));
-    this.render();
+  updateFeed() {
+    const feed = this.querySelector('message-feed');
+    if (feed) feed.render();
   }
 
   render() {
     this.innerHTML = `
-      <header style="margin-bottom: 2rem; text-align: center;">
-        <h1 style="font-size: 2.5rem; font-weight: 800; color: var(--primary);">Smart Calorie AI</h1>
-        <p style="color: var(--text-muted);">Track your nutrition with a snap or a text.</p>
+      <header style="padding: 2rem 1rem; text-align: center;">
+        <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -2px; line-height: 1;">
+          100 <span style="color: var(--primary); font-size: 1.5rem; letter-spacing: 0;">&middot; Community</span>
+        </h1>
+        <p style="color: var(--text-dim); margin-top: 0.5rem; font-weight: 600;">Share a thought. Keep it short.</p>
       </header>
-      
-      <main style="max-width: 800px; margin: 0 auto; width: 100%;">
-        <food-input></food-input>
-        
-        ${this.state.currentResult ? `
-          <div style="margin-top: 2rem; animation: slideUp 0.5s ease-out;">
-            <calorie-result data-result='${JSON.stringify(this.state.currentResult)}'></calorie-result>
-          </div>
-        ` : ''}
 
-        <div style="margin-top: 3rem;">
-          <h2 style="margin-bottom: 1rem; font-size: 1.25rem;">Recent Logs</h2>
-          <food-history data-history='${JSON.stringify(this.state.history)}'></food-history>
-        </div>
+      <main style="max-width: 600px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 2rem; padding-bottom: 5rem;">
+        <post-editor></post-editor>
+        <message-feed></message-feed>
       </main>
 
-      <style>
-        @keyframes slideUp {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      </style>
+      <footer style="padding: 2rem; text-align: center; color: var(--text-dim); font-size: 0.75rem;">
+        &copy; 2026 Pulse Communities. 100 chars only.
+      </footer>
     `;
   }
 }
 
-class FoodInput extends HTMLElement {
+class PostEditor extends HTMLElement {
   constructor() {
     super();
-    this.activeTab = 'text'; // 'camera' or 'text'
+    this.nickname = localStorage.getItem('last_nickname') || '';
+    this.charLimit = 100;
   }
 
   connectedCallback() {
     this.render();
   }
 
-  async setupCamera() {
-    const video = this.querySelector('#camera-feed');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      video.srcObject = stream;
-    } catch (err) {
-      console.error(err);
-      alert('Camera access denied or not available.');
-    }
+  handleInput(e) {
+    const content = e.target.value;
+    const count = content.length;
+    const counter = this.querySelector('#char-counter');
+    const btn = this.querySelector('#post-btn');
+    
+    counter.textContent = `${count}/${this.charLimit}`;
+    counter.style.color = count > this.charLimit ? 'var(--accent)' : 'var(--text-dim)';
+    btn.disabled = count === 0 || count > this.charLimit;
   }
 
-  async handleAction() {
-    const btn = this.querySelector('#action-btn');
+  async submit() {
+    const nickInput = this.querySelector('#nick-input');
+    const contentInput = this.querySelector('#content-input');
+    const btn = this.querySelector('#post-btn');
+
+    if (!contentInput.value || contentInput.value.length > this.charLimit) return;
+
     btn.disabled = true;
-    btn.textContent = 'Analyzing...';
+    btn.textContent = 'Sharing...';
 
-    let result;
-    if (this.activeTab === 'text') {
-      const text = this.querySelector('#food-text').value;
-      result = FoodAnalyzer.analyzeText(text);
-    } else {
-      const video = this.querySelector('#camera-feed');
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext('2d').drawImage(video, 0, 0);
-      result = await FoodAnalyzer.analyzeImage(canvas);
-    }
+    // Simulate delay
+    await new Promise(r => setTimeout(r, 600));
 
-    this.dispatchEvent(new CustomEvent('food-analyzed', {
-      bubbles: true,
-      detail: result
-    }));
+    CommunityStore.saveMessage(nickInput.value, contentInput.value);
+    localStorage.setItem('last_nickname', nickInput.value);
 
-    btn.disabled = false;
-    btn.textContent = this.activeTab === 'text' ? 'Analyze Meal' : 'Capture & Analyze';
+    contentInput.value = '';
+    this.querySelector('#char-counter').textContent = `0/${this.charLimit}`;
+    btn.textContent = 'Share Thought';
+    
+    this.dispatchEvent(new CustomEvent('new-message', { bubbles: true }));
   }
 
   render() {
     this.innerHTML = `
-      <div class="card" style="padding: 1rem;">
-        <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg-main); padding: 0.25rem; border-radius: var(--radius-md);">
-          <button class="tab-btn ${this.activeTab === 'text' ? 'active' : ''}" data-tab="text" style="flex: 1; padding: 0.5rem; border-radius: var(--radius-sm);">Text Input</button>
-          <button class="tab-btn ${this.activeTab === 'camera' ? 'active' : ''}" data-tab="camera" style="flex: 1; padding: 0.5rem; border-radius: var(--radius-sm);">Camera Vision</button>
-        </div>
-
-        <div id="input-content">
-          ${this.activeTab === 'text' ? `
-            <textarea id="food-text" placeholder="What did you eat? (e.g., A slice of pizza and a salad)" 
-              style="width: 100%; min-height: 120px; padding: 1rem; border-radius: var(--radius-md); border: 1px solid oklch(0 0 0 / 0.1); font-family: inherit; margin-bottom: 1rem; resize: none;"></textarea>
-          ` : `
-            <div style="position: relative; border-radius: var(--radius-md); overflow: hidden; background: #000; aspect-ratio: 4/3; margin-bottom: 1rem;">
-              <video id="camera-feed" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
-            </div>
-          `}
-        </div>
-
-        <button id="action-btn" class="btn-primary" style="width: 100%;">
-          ${this.activeTab === 'text' ? 'Analyze Meal' : 'Capture & Analyze'}
-        </button>
-      </div>
-
-      <style>
-        .tab-btn { background: transparent; color: var(--text-muted); font-weight: 600; }
-        .tab-btn.active { background: var(--surface); color: var(--primary); box-shadow: var(--shadow-sm); }
-      </style>
-    `;
-
-    this.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.onclick = () => {
-        this.activeTab = btn.dataset.tab;
-        this.render();
-        if (this.activeTab === 'camera') this.setupCamera();
-      };
-    });
-
-    this.querySelector('#action-btn').onclick = () => this.handleAction();
-  }
-}
-
-class CalorieResult extends HTMLElement {
-  connectedCallback() {
-    const result = JSON.parse(this.dataset.result);
-    this.render(result);
-  }
-
-  render(result) {
-    this.innerHTML = `
-      <div class="card" style="background: linear-gradient(135deg, var(--primary), oklch(0.6 0.2 160)); color: white; container-type: inline-size;">
-        <div class="result-grid" style="display: grid; gap: 1.5rem;">
-          <div>
-            <h3 style="opacity: 0.9; font-weight: 400;">Total Calories</h3>
-            <div style="font-size: 3.5rem; font-weight: 800; line-height: 1;">${result.totalKcal} <span style="font-size: 1rem; font-weight: 400;">kcal</span></div>
-          </div>
+      <div class="card animate-entry">
+        <div style="display: flex; gap: 0.75rem; flex-direction: column;">
+          <input type="text" id="nick-input" class="input-field" placeholder="Nickname" value="${this.nickname}" style="max-width: 200px;">
           
-          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; background: oklch(1 0 0 / 0.1); padding: 1rem; border-radius: var(--radius-md); backdrop-filter: blur(4px);">
-            <div style="text-align: center;">
-              <div style="font-size: 0.75rem; opacity: 0.8;">Protein</div>
-              <div style="font-weight: 700;">${result.items.reduce((s, i) => s + (i.protein || 0), 0).toFixed(1)}g</div>
-            </div>
-            <div style="text-align: center;">
-              <div style="font-size: 0.75rem; opacity: 0.8;">Carbs</div>
-              <div style="font-weight: 700;">${result.items.reduce((s, i) => s + (i.carbs || 0), 0).toFixed(1)}g</div>
-            </div>
-            <div style="text-align: center;">
-              <div style="font-size: 0.75rem; opacity: 0.8;">Fat</div>
-              <div style="font-weight: 700;">${result.items.reduce((s, i) => s + (i.fat || 0), 0).toFixed(1)}g</div>
+          <div style="position: relative;">
+            <textarea id="content-input" class="input-field" placeholder="What's on your mind?" 
+              style="min-height: 100px; resize: none; border-radius: var(--radius-md); padding-bottom: 2rem;"></textarea>
+            
+            <div id="char-counter" class="char-count" style="position: absolute; bottom: 0.75rem; right: 1rem; color: var(--text-dim);">
+              0/${this.charLimit}
             </div>
           </div>
-        </div>
 
-        <div style="margin-top: 1.5rem; border-top: 1px solid oklch(1 0 0 / 0.2); padding-top: 1rem;">
-          <h4 style="font-size: 0.875rem; margin-bottom: 0.5rem; opacity: 0.9;">Items Detected:</h4>
-          <ul style="list-style: none; display: flex; flex-wrap: wrap; gap: 0.5rem;">
-            ${result.items.map(item => `
-              <li style="background: oklch(1 0 0 / 0.2); padding: 0.25rem 0.75rem; border-radius: 100px; font-size: 0.75rem; text-transform: capitalize;">
-                ${item.name} (${item.kcal} kcal)
-              </li>
-            `).join('')}
-          </ul>
+          <button id="post-btn" class="btn btn-primary" disabled style="justify-content: center;">Share Thought</button>
         </div>
       </div>
     `;
+
+    this.querySelector('#content-input').oninput = (e) => this.handleInput(e);
+    this.querySelector('#post-btn').onclick = () => this.submit();
   }
 }
 
-class FoodHistory extends HTMLElement {
+class MessageFeed extends HTMLElement {
   connectedCallback() {
-    const history = JSON.parse(this.dataset.history);
-    this.render(history);
+    this.render();
   }
 
-  render(history) {
-    if (history.length === 0) {
-      this.innerHTML = `<p style="text-align: center; color: var(--text-muted); padding: 2rem;">No recent logs yet.</p>`;
+  render() {
+    const messages = CommunityStore.getMessages();
+    if (messages.length === 0) {
+      this.innerHTML = `
+        <div style="text-align: center; padding: 4rem 2rem; color: var(--text-dim);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
+          <p>Be the first to share a thought in the community.</p>
+        </div>
+      `;
       return;
     }
 
     this.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        ${history.map(entry => `
-          <div class="card" style="padding: 1rem; display: flex; justify-content: space-between; align-items: center; background: var(--surface);">
-            <div>
-              <div style="font-weight: 600; text-transform: capitalize;">${entry.items[0].name}${entry.items.length > 1 ? ` +${entry.items.length - 1}` : ''}</div>
-              <div style="font-size: 0.75rem; color: var(--text-muted);">${new Date(entry.timestamp).toLocaleTimeString()}</div>
-            </div>
-            <div style="font-weight: 800; color: var(--primary); font-size: 1.25rem;">
-              ${entry.totalKcal} <span style="font-size: 0.75rem; font-weight: 400;">kcal</span>
-            </div>
-          </div>
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        ${messages.map(msg => `
+          <message-card data-msg='${JSON.stringify(msg)}' class="animate-entry"></message-card>
         `).join('')}
       </div>
     `;
   }
 }
 
-customElements.define('food-app', FoodApp);
-customElements.define('food-input', FoodInput);
-customElements.define('calorie-result', CalorieResult);
-customElements.define('food-history', FoodHistory);
+class MessageCard extends HTMLElement {
+  connectedCallback() {
+    const msg = JSON.parse(this.dataset.msg);
+    const time = this.formatTime(msg.timestamp);
+    
+    this.innerHTML = `
+      <div class="card" style="padding: 1.25rem; display: flex; gap: 1rem; align-items: flex-start;">
+        <div style="width: 48px; height: 48px; min-width: 48px; border-radius: 50%; background: oklch(0.7 0.2 ${msg.avatarHue}); 
+          display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; box-shadow: 0 4px 12px oklch(0.7 0.2 ${msg.avatarHue} / 0.3);">
+          ${msg.nickname.charAt(0).toUpperCase()}
+        </div>
+        
+        <div style="flex: 1; overflow: hidden;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+            <span style="font-weight: 800; font-size: 0.9rem;">${msg.nickname}</span>
+            <span style="font-size: 0.7rem; color: var(--text-dim);">${time}</span>
+          </div>
+          <p style="word-wrap: break-word; color: oklch(0.95 0 0);">${msg.content}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  formatTime(isoString) {
+    const date = new Date(isoString);
+    const diff = Math.floor((new Date() - date) / 1000);
+    
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return date.toLocaleDateString();
+  }
+}
+
+customElements.define('community-app', CommunityApp);
+customElements.define('post-editor', PostEditor);
+customElements.define('message-feed', MessageFeed);
+customElements.define('message-card', MessageCard);
