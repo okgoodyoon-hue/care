@@ -1,26 +1,27 @@
-# Smart Food Calorie AI - Blueprint (Vision-First)
+# 100-Pulse Community - Blueprint
 
 ## Overview
-A high-impact web application that leverages vision-based analysis to help users track their caloric intake from food photos. It features a modern, energetic design and a robust set of input options.
+A minimalist micro-community where users share thoughts in 100 characters or less. It features an interest-based matching system to connect users with similar vibes and issues.
 
 ## Features
-- **Vision-First Input:** Primary interface for capturing or uploading food photos.
-- **Text Analysis Fallback:** Clean text input for manual meal description.
-- **Smart Calorie & Macro Breakdown:** High-impact "Nutrition Cards" with calories, protein, carbs, and fat.
-- **Meal History:** Persistent list of recently analyzed meals using `localStorage`.
-- **Modern UI:** Healthy/Energetic color palette, vibrant animations, and responsive Glassmorphism effects.
+- **100-Char Pulses:** High-impact, short-form posts with character enforcement.
+- **Interest Pulse Tags:** Users tag their posts with interests (e.g., #AI, #Music, #Issues).
+- **Matching Engine (Simulated):** UI section that matches users based on common interest tags.
+- **Vibrant Feed:** Vertical, real-time stream of community pulses.
+- **Modern UI:** "Pulse & Glow" theme with Glassmorphism and Neon accents.
+- **Persistence:** Local storage for user pulses and profile.
 
 ## Technical Stack
-- **Web Components:** `<calorie-app>`, `<vision-input>`, `<nutrition-result>`, `<recent-meals>`.
-- **Modern CSS:** Cascade Layers (`@layer`), `oklch`, `container-type`, and `:has()`.
-- **Vanilla JavaScript:** ES Modules, `getUserMedia` for camera access, and `localStorage` for state persistence.
+- **Web Components:** `<pulse-app>`, `<pulse-editor>`, `<pulse-feed>`, `<match-view>`.
+- **Modern CSS:** Cascade Layers (`@layer`), `oklch`, Glassmorphism, and neon gradients.
+- **Vanilla JavaScript:** ES Modules, custom events, and `localStorage` for data sync.
 
 ## Implementation Plan
-1. **Infrastructure:** Define "Healthy & Energetic" palette (Greens/Yellows).
+1. **Infrastructure:** Define "Pulse & Glow" palette and layout layers.
 2. **Web Components:**
-   - `<vision-input>`: Interactive camera capture and file upload fallback.
-   - `<nutrition-result>`: Visual macro/calorie breakdown.
-   - `<recent-meals>`: History feed.
-3. **Core Logic:** Mock AI engine for image/text analysis and state management.
-4. **Polishing:** Result entry animations and mobile responsive layout.
-5. **Validation:** Verify camera capture and history persistence.
+   - `<pulse-editor>`: 100-char input with dynamic tag picker.
+   - `<pulse-feed>`: Feed display with reverse chronological ordering.
+   - `<match-view>`: Simulated matching logic for user connection.
+3. **Core Logic:** `PulseStore` for managing posts, tags, and state.
+4. **Polishing:** Neon entry animations and mobile responsive layout.
+5. **Validation:** Verify 100-char enforcement and tag-based matching.
