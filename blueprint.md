@@ -1,36 +1,26 @@
-# 100-Character Community App - Blueprint
+# Smart Food Calorie AI - Blueprint (Vision-First)
 
 ## Overview
-A minimalist micro-blogging community where users can share thoughts in 100 characters or less. Designed for high-impact, short-form communication with a modern "Pulse & Neon" aesthetic.
+A high-impact web application that leverages vision-based analysis to help users track their caloric intake from food photos. It features a modern, energetic design and a robust set of input options.
 
 ## Features
-- **100-Char Limit:** Input area with real-time character counting (0/100).
-- **Public Feed:** Vertical scrollable feed of all shared messages, newest first.
-- **Nickname Profiles:** Simple nickname field to identify users.
-- **Unique Avatars:** Each nickname gets a unique `oklch` color background.
-- **Modern UI:** Glassmorphism effects, vibrant neon accents, and smooth entry animations.
-- **Persistence:** Messages are saved to `localStorage` to simulate a live community feed.
+- **Vision-First Input:** Primary interface for capturing or uploading food photos.
+- **Text Analysis Fallback:** Clean text input for manual meal description.
+- **Smart Calorie & Macro Breakdown:** High-impact "Nutrition Cards" with calories, protein, carbs, and fat.
+- **Meal History:** Persistent list of recently analyzed meals using `localStorage`.
+- **Modern UI:** Healthy/Energetic color palette, vibrant animations, and responsive Glassmorphism effects.
 
 ## Technical Stack
-- **Web Components:** Encapsulated logic for `<community-app>`, `<post-editor>`, `<message-feed>`, and `<message-card>`.
-- **Modern CSS:** `@layer`, `oklch`, `:has()`, Glassmorphism, and responsive grid layouts.
-- **Vanilla JavaScript:** ES modules, async/await for simulated network delays.
-- **Storage:** `localStorage` for feed persistence.
+- **Web Components:** `<calorie-app>`, `<vision-input>`, `<nutrition-result>`, `<recent-meals>`.
+- **Modern CSS:** Cascade Layers (`@layer`), `oklch`, `container-type`, and `:has()`.
+- **Vanilla JavaScript:** ES Modules, `getUserMedia` for camera access, and `localStorage` for state persistence.
 
 ## Implementation Plan
-1. **Infrastructure & Theming:**
-   - Define a "Pulse & Neon" palette using `oklch`.
-   - Implement global Glassmorphism and animation styles.
+1. **Infrastructure:** Define "Healthy & Energetic" palette (Greens/Yellows).
 2. **Web Components:**
-   - `<post-editor>`: Max 100 char limit, character counter, nickname field.
-   - `<message-feed>`: Feed display logic (reverse chronological).
-   - `<message-card>`: Individual message UI with unique avatars.
-3. **Core Logic:**
-   - `CommunityStore` module for state management and `localStorage` sync.
-   - Event-driven UI updates for real-time feel.
-4. **Polishing:**
-   - Add entry/exit animations for new messages.
-   - Mobile-first responsive refinements.
-5. **Validation:**
-   - Verify char limit enforcement.
-   - Check persistence across reloads.
+   - `<vision-input>`: Interactive camera capture and file upload fallback.
+   - `<nutrition-result>`: Visual macro/calorie breakdown.
+   - `<recent-meals>`: History feed.
+3. **Core Logic:** Mock AI engine for image/text analysis and state management.
+4. **Polishing:** Result entry animations and mobile responsive layout.
+5. **Validation:** Verify camera capture and history persistence.
