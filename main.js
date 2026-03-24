@@ -1,113 +1,95 @@
-// --- Pulse Store (State & Data Logic) ---
-class PulseStore {
-  static STORAGE_KEY = 'pulse_community_data';
-  static TAGS = ['AI', 'Design', 'Crypto', 'Politics', 'Gaming', 'Music', 'Tech', 'Food', 'Travel', 'Health'];
+// --- Community Store (한국어 데이터 및 로직) ---
+class CommunityStore {
+  static STORAGE_KEY = 'community_feed_100_kr';
+  static TAGS = ['인공지능', '경제', '여행', '맛집', '테크', '디자인', '음악', '운동', '취업', '정치'];
 
-  static getState() {
-    const defaultData = {
-      pulses: [
-        { id: 1, nickname: 'VibeMaster', content: 'Design is not just what it looks like. It is how it works.', tags: ['Design', 'Tech'], timestamp: new Date(Date.now() - 3600000).toISOString(), hue: 200 },
-        { id: 2, nickname: 'AIGuru', content: 'Prompt engineering is the new coding. Change my mind.', tags: ['AI', 'Tech'], timestamp: new Date(Date.now() - 7200000).toISOString(), hue: 140 },
-        { id: 3, nickname: 'SoundWave', content: 'New vinyl arrived today. Pure analog warmth.', tags: ['Music'], timestamp: new Date(Date.now() - 10800000).toISOString(), hue: 300 }
-      ],
-      userProfile: {
-        nickname: localStorage.getItem('pulse_last_nick') || '',
-        interests: JSON.parse(localStorage.getItem('pulse_interests') || '[]')
-      }
-    };
-    return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || JSON.stringify(defaultData));
+  static getMessages() {
+    return JSON.parse(localStorage.getItem(this.STORAGE_KEY) || '[]');
   }
 
-  static savePulse(nickname, content, tags) {
-    const state = this.getState();
-    const newPulse = {
+  static saveMessage(nickname, content, tags) {
+    const messages = this.getMessages();
+    const newMessage = {
       id: crypto.randomUUID(),
-      nickname: nickname || 'Anonymous',
+      nickname: nickname || '익명',
       content: content.substring(0, 100),
-      tags,
+      tags: tags || [],
       timestamp: new Date().toISOString(),
-      hue: Math.floor(Math.random() * 360)
+      avatarHue: Math.floor(Math.random() * 360)
     };
-    state.pulses.unshift(newPulse);
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
-    localStorage.setItem('pulse_last_nick', nickname);
-    return newPulse;
+    messages.unshift(newMessage);
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(messages.slice(0, 50)));
+    return newMessage;
   }
 
   static getMatches() {
-    const state = this.getState();
-    const myInterests = state.userProfile.interests;
+    const messages = this.getMessages();
+    const myInterests = JSON.parse(localStorage.getItem('my_interests') || '[]');
     if (myInterests.length === 0) return [];
 
-    // Simple matching: people who posted with at least one common interest tag
     const matches = new Map();
-    state.pulses.forEach(p => {
-      if (p.nickname === state.userProfile.nickname) return;
-      const common = p.tags.filter(t => myInterests.includes(t));
+    messages.forEach(m => {
+      const common = m.tags.filter(t => myInterests.includes(t));
       if (common.length > 0) {
-        if (!matches.has(p.nickname)) {
-          matches.set(p.nickname, { nickname: p.nickname, common, hue: p.hue });
+        if (!matches.has(m.nickname)) {
+          matches.set(m.nickname, { nickname: m.nickname, common, hue: m.avatarHue });
         }
       }
     });
-    return Array.from(matches.values());
+    return Array.from(matches.values()).slice(0, 5);
   }
 }
 
 // --- Web Components ---
 
-class PulseApp extends HTMLElement {
+class CommunityApp extends HTMLElement {
   connectedCallback() {
     this.render();
-    this.addEventListener('pulse-added', () => this.refresh());
+    this.addEventListener('new-message', () => this.refresh());
     this.addEventListener('interests-updated', () => this.refresh());
   }
 
   refresh() {
-    this.render();
+    const feed = this.querySelector('message-feed');
+    const matches = this.querySelector('match-view');
+    if (feed) feed.render();
+    if (matches) matches.render();
   }
 
   render() {
     this.innerHTML = `
       <header style="padding: 2.5rem 1rem; text-align: center;">
-        <h1 style="font-size: 3rem; font-weight: 800; letter-spacing: -3px; line-height: 1; margin-bottom: 0.5rem;">
-          100<span style="color: var(--primary);">PULSE</span>
+        <h1 style="font-size: 3rem; font-weight: 900; letter-spacing: -3px; line-height: 1;">
+          100 <span style="color: var(--primary); font-size: 1.5rem; letter-spacing: 0;">&middot; 펄스</span>
         </h1>
-        <p style="color: var(--text-dim); font-weight: 600; font-size: 0.9rem; letter-spacing: 1px; text-transform: uppercase;">Micro-Community & Matching</p>
+        <p style="color: var(--text-dim); margin-top: 0.5rem; font-weight: 700;">짧고 강렬한 100자의 소통</p>
       </header>
 
-      <main style="max-width: 650px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 2.5rem; padding-bottom: 5rem;">
-        <pulse-editor></pulse-editor>
-        
-        <div style="display: grid; gap: 2rem;">
-          <section>
-            <h2 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; color: var(--accent);">● SMART MATCHES</h2>
-            <match-view></match-view>
-          </section>
-
-          <section>
-            <h2 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; color: var(--primary);">● COMMUNITY FEED</h2>
-            <pulse-feed></pulse-feed>
-          </section>
-        </div>
+      <main style="max-width: 650px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 2rem; padding-bottom: 5rem;">
+        <match-view></match-view>
+        <post-editor></post-editor>
+        <message-feed></message-feed>
       </main>
+
+      <footer style="padding: 2rem; text-align: center; color: var(--text-dim); font-size: 0.8rem; font-weight: 700;">
+        &copy; 2026 100 Pulse Community.
+      </footer>
     `;
   }
 }
 
-class PulseEditor extends HTMLElement {
+class PostEditor extends HTMLElement {
   constructor() {
     super();
-    this.selectedTags = [];
-    const state = PulseStore.getState();
-    this.nickname = state.userProfile.nickname;
+    this.nickname = localStorage.getItem('last_nickname') || '';
+    this.selectedTags = JSON.parse(localStorage.getItem('my_interests') || '[]');
   }
 
   connectedCallback() {
     this.render();
   }
 
-  handleTagClick(tag, el) {
+  toggleTag(tag, el) {
     if (this.selectedTags.includes(tag)) {
       this.selectedTags = this.selectedTags.filter(t => t !== tag);
       el.classList.remove('active');
@@ -115,8 +97,7 @@ class PulseEditor extends HTMLElement {
       this.selectedTags.push(tag);
       el.classList.add('active');
     }
-    // Update global user interests for matching
-    localStorage.setItem('pulse_interests', JSON.stringify(this.selectedTags));
+    localStorage.setItem('my_interests', JSON.stringify(this.selectedTags));
     this.dispatchEvent(new CustomEvent('interests-updated', { bubbles: true }));
   }
 
@@ -128,55 +109,56 @@ class PulseEditor extends HTMLElement {
     if (!content || content.length > 100) return;
 
     btn.disabled = true;
-    btn.textContent = 'Pulsing...';
+    btn.textContent = '펄스 전송 중...';
 
-    await new Promise(r => setTimeout(r, 800));
-    
-    PulseStore.savePulse(nick, content, this.selectedTags);
-    
+    await new Promise(r => setTimeout(r, 600));
+
+    CommunityStore.saveMessage(nick, content, this.selectedTags);
+    localStorage.setItem('last_nickname', nick);
+
     this.querySelector('#content-input').value = '';
-    this.querySelector('#char-count').textContent = '0/100';
-    btn.textContent = 'Send Pulse';
+    this.querySelector('#char-counter').textContent = '0/100';
+    btn.textContent = '펄스 공유하기';
     btn.disabled = true;
 
-    this.dispatchEvent(new CustomEvent('pulse-added', { bubbles: true }));
+    this.dispatchEvent(new CustomEvent('new-message', { bubbles: true }));
   }
 
   render() {
     this.innerHTML = `
-      <div class="card animate-pulse-entry">
+      <div class="card animate-entry">
         <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <input type="text" id="nick-input" class="input-field" placeholder="Nickname" value="${this.nickname}" style="max-width: 220px;">
+          <input type="text" id="nick-input" class="input-field" placeholder="닉네임" value="${this.nickname}" style="max-width: 200px;">
           
           <div style="position: relative;">
-            <textarea id="content-input" class="input-field" placeholder="What's your pulse? (100 chars max)" 
-              style="min-height: 100px; resize: none; border-radius: var(--radius-md); padding-bottom: 2rem;"></textarea>
-            <div id="char-count" style="position: absolute; bottom: 0.75rem; right: 1rem; font-size: 0.75rem; font-weight: 800; color: var(--text-dim);">0/100</div>
+            <textarea id="content-input" class="input-field" placeholder="지금 무슨 생각을 하고 계신가요? (100자 이내)" 
+              style="min-height: 100px; resize: none; padding-bottom: 2rem;"></textarea>
+            <div id="char-counter" class="char-count" style="position: absolute; bottom: 0.75rem; right: 1rem; color: var(--text-dim);">0/100</div>
           </div>
 
           <div>
-            <p style="font-size: 0.75rem; font-weight: 800; color: var(--text-dim); margin-bottom: 0.5rem; text-transform: uppercase;">Select Interests</p>
+            <p style="font-size: 0.75rem; font-weight: 800; color: var(--text-dim); margin-bottom: 0.5rem;">관심사 태그 (매칭에 사용됩니다)</p>
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-              ${PulseStore.TAGS.map(t => `
-                <span class="tag ${JSON.parse(localStorage.getItem('pulse_interests') || '[]').includes(t) ? 'active' : ''}" data-tag="${t}">${t}</span>
+              ${CommunityStore.TAGS.map(t => `
+                <span class="tag ${this.selectedTags.includes(t) ? 'active' : ''}" data-tag="${t}">${t}</span>
               `).join('')}
             </div>
           </div>
 
-          <button id="post-btn" class="btn btn-primary" disabled style="justify-content: center; width: 100%;">Send Pulse</button>
+          <button id="post-btn" class="btn btn-primary" disabled style="justify-content: center;">펄스 공유하기</button>
         </div>
       </div>
     `;
 
     this.querySelectorAll('.tag').forEach(tagEl => {
-      tagEl.onclick = () => this.handleTagClick(tagEl.dataset.tag, tagEl);
+      tagEl.onclick = () => this.toggleTag(tagEl.dataset.tag, tagEl);
     });
 
     const contentInput = this.querySelector('#content-input');
     contentInput.oninput = (e) => {
       const len = e.target.value.length;
-      this.querySelector('#char-count').textContent = `${len}/100`;
-      this.querySelector('#char-count').style.color = len > 100 ? 'var(--accent)' : 'var(--text-dim)';
+      this.querySelector('#char-counter').textContent = `${len}/100`;
+      this.querySelector('#char-counter').style.color = len > 100 ? 'var(--accent)' : 'var(--text-dim)';
       this.querySelector('#post-btn').disabled = len === 0 || len > 100;
     };
 
@@ -184,33 +166,38 @@ class PulseEditor extends HTMLElement {
   }
 }
 
-class PulseFeed extends HTMLElement {
+class MessageFeed extends HTMLElement {
   connectedCallback() {
     this.render();
   }
 
   render() {
-    const state = PulseStore.getState();
-    if (state.pulses.length === 0) {
-      this.innerHTML = `<p style="text-align: center; color: var(--text-dim); padding: 2rem;">Silence in the community... Start a pulse!</p>`;
+    const messages = CommunityStore.getMessages();
+    if (messages.length === 0) {
+      this.innerHTML = `
+        <div style="text-align: center; padding: 4rem 2rem; color: var(--text-dim);">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">👋</div>
+          <p>커뮤니티의 첫 번째 펄스를 남겨보세요!</p>
+        </div>
+      `;
       return;
     }
 
     this.innerHTML = `
-      <div style="display: flex; flex-direction: column; gap: 1.25rem;">
-        ${state.pulses.map(p => `
-          <div class="card animate-pulse-entry" style="padding: 1.25rem; display: flex; gap: 1rem; align-items: flex-start;">
-            <div style="width: 44px; height: 44px; min-width: 44px; border-radius: 12px; background: oklch(0.7 0.2 ${p.hue}); display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; box-shadow: 0 4px 15px oklch(0.7 0.2 ${p.hue} / 0.3);">
-              ${p.nickname.charAt(0).toUpperCase()}
+      <div style="display: flex; flex-direction: column; gap: 1rem;">
+        ${messages.map(msg => `
+          <div class="card animate-entry" style="padding: 1.25rem; display: flex; gap: 1rem; align-items: flex-start;">
+            <div style="width: 48px; height: 48px; min-width: 48px; border-radius: 50%; background: oklch(0.7 0.2 ${msg.avatarHue}); display: flex; align-items: center; justify-content: center; font-weight: 800; color: white;">
+              ${msg.nickname.charAt(0).toUpperCase()}
             </div>
             <div style="flex: 1;">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-                <span style="font-weight: 800; font-size: 0.9rem;">${p.nickname}</span>
-                <span style="font-size: 0.7rem; color: var(--text-dim);">${this.formatTime(p.timestamp)}</span>
+              <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem;">
+                <span style="font-weight: 800; font-size: 0.9rem;">${msg.nickname}</span>
+                <span style="font-size: 0.7rem; color: var(--text-dim);">${this.formatTime(msg.timestamp)}</span>
               </div>
-              <p style="font-size: 1rem; color: oklch(0.95 0 0); margin-bottom: 0.75rem; word-wrap: break-word;">${p.content}</p>
-              <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
-                ${p.tags.map(t => `<span style="font-size: 0.65rem; font-weight: 800; color: var(--primary); background: oklch(0.65 0.25 280 / 0.1); padding: 0.2rem 0.6rem; border-radius: 100px;">#${t}</span>`).join('')}
+              <p style="word-wrap: break-word; font-size: 1rem; color: oklch(0.98 0 0); margin-bottom: 0.5rem;">${msg.content}</p>
+              <div style="display: flex; flex-wrap: wrap; gap: 0.3rem;">
+                ${msg.tags.map(t => `<span style="font-size: 0.65rem; color: var(--primary); font-weight: 700;">#${t}</span>`).join('')}
               </div>
             </div>
           </div>
@@ -221,9 +208,9 @@ class PulseFeed extends HTMLElement {
 
   formatTime(iso) {
     const diff = Math.floor((new Date() - new Date(iso)) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return `${Math.floor(diff/60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
     return new Date(iso).toLocaleDateString();
   }
 }
@@ -234,48 +221,33 @@ class MatchView extends HTMLElement {
   }
 
   render() {
-    const matches = PulseStore.getMatches();
-    const state = PulseStore.getState();
-    const myInterests = state.userProfile.interests;
-
-    if (myInterests.length === 0) {
-      this.innerHTML = `
-        <div class="card" style="padding: 1rem; text-align: center; font-size: 0.85rem; color: var(--text-dim);">
-          Select interests above to see matches!
-        </div>
-      `;
-      return;
-    }
-
+    const matches = CommunityStore.getMatches();
     if (matches.length === 0) {
-      this.innerHTML = `
-        <div class="card" style="padding: 1rem; text-align: center; font-size: 0.85rem; color: var(--text-dim);">
-          Searching for similar pulses...
-        </div>
-      `;
+      this.innerHTML = '';
       return;
     }
 
     this.innerHTML = `
-      <div style="display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem; scroll-snap-type: x mandatory;">
-        ${matches.map(m => `
-          <div class="card" style="min-width: 180px; padding: 1.25rem; scroll-snap-align: start; flex-shrink: 0; text-align: center; background: linear-gradient(135deg, var(--bg-surface), oklch(0.16 0.04 280 / 0.8));">
-            <div style="width: 50px; height: 50px; margin: 0 auto 0.75rem; border-radius: 50%; background: oklch(0.7 0.2 ${m.hue}); display: flex; align-items: center; justify-content: center; font-weight: 800; color: white; border: 3px solid var(--primary);">
-              ${m.nickname.charAt(0).toUpperCase()}
+      <div style="margin-bottom: 1rem;">
+        <h2 style="font-size: 1rem; font-weight: 900; color: var(--accent); margin-bottom: 0.75rem;">나와 비슷한 관심사의 유저</h2>
+        <div style="display: flex; gap: 0.75rem; overflow-x: auto; padding-bottom: 0.5rem;">
+          ${matches.map(m => `
+            <div class="card" style="min-width: 160px; padding: 1rem; flex-shrink: 0; text-align: center;">
+              <div style="width: 50px; height: 50px; margin: 0 auto 0.5rem; border-radius: 50%; background: oklch(0.7 0.2 ${m.hue}); display: flex; align-items: center; justify-content: center; font-weight: 900; color: white; border: 3px solid var(--primary);">
+                ${m.nickname.charAt(0).toUpperCase()}
+              </div>
+              <div style="font-weight: 800; font-size: 0.85rem; margin-bottom: 0.2rem;">${m.nickname}</div>
+              <div style="font-size: 0.65rem; color: var(--primary); font-weight: 700;">${m.common[0]} 등</div>
+              <button class="btn btn-primary" style="padding: 0.3rem 0.8rem; font-size: 0.7rem; width: 100%; margin-top: 0.5rem;">대화하기</button>
             </div>
-            <div style="font-weight: 800; font-size: 0.9rem; margin-bottom: 0.25rem;">${m.nickname}</div>
-            <div style="font-size: 0.65rem; color: var(--primary); font-weight: 800; margin-bottom: 0.75rem;">
-              Matches: ${m.common.join(', ')}
-            </div>
-            <button class="btn btn-primary" style="padding: 0.4rem 1rem; font-size: 0.75rem; width: 100%;">Connect</button>
-          </div>
-        `).join('')}
+          `).join('')}
+        </div>
       </div>
     `;
   }
 }
 
-customElements.define('pulse-app', PulseApp);
-customElements.define('pulse-editor', PulseEditor);
-customElements.define('pulse-feed', PulseFeed);
+customElements.define('pulse-app', CommunityApp);
+customElements.define('post-editor', PostEditor);
+customElements.define('message-feed', MessageFeed);
 customElements.define('match-view', MatchView);

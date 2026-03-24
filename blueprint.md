@@ -1,27 +1,27 @@
-# 100-Pulse Community - Blueprint
+# 100-Pulse (한글판) 커뮤니티 - 블루프린트
 
-## Overview
-A minimalist micro-community where users share thoughts in 100 characters or less. It features an interest-based matching system to connect users with similar vibes and issues.
+## 개요
+한글 100자 이내의 짧은 글로 소통하고, 관심사를 기반으로 비슷한 사용자를 매칭해주는 미니멀 마이크로 커뮤니티 플랫폼.
 
-## Features
-- **100-Char Pulses:** High-impact, short-form posts with character enforcement.
-- **Interest Pulse Tags:** Users tag their posts with interests (e.g., #AI, #Music, #Issues).
-- **Matching Engine (Simulated):** UI section that matches users based on common interest tags.
-- **Vibrant Feed:** Vertical, real-time stream of community pulses.
-- **Modern UI:** "Pulse & Glow" theme with Glassmorphism and Neon accents.
-- **Persistence:** Local storage for user pulses and profile.
+## 주요 기능
+- **100자 펄스:** 한글 100자 제한이 적용된 고임팩트 짧은 글 작성.
+- **관심사 태그:** 인공지능, 테크, 경제, 여행, 음악 등 한국어 태그 시스템.
+- **매칭 엔진 (시뮬레이션):** 공통된 관심사 태그를 가진 사용자를 찾아 상단에 매칭 카드로 표시.
+- **실시간 피드:** 커뮤니티의 모든 펄스를 최신순으로 보여주는 실시간 스트림.
+- **모던 UI:** "Neon & Dark Pulse" 테마, 유리 질감(Glassmorphism), 한글 가독성 최적화.
+- **영속성:** 브라우저 로컬 스토리지를 활용한 데이터 저장.
 
-## Technical Stack
-- **Web Components:** `<pulse-app>`, `<pulse-editor>`, `<pulse-feed>`, `<match-view>`.
-- **Modern CSS:** Cascade Layers (`@layer`), `oklch`, Glassmorphism, and neon gradients.
-- **Vanilla JavaScript:** ES Modules, custom events, and `localStorage` for data sync.
+## 기술 스택
+- **웹 컴포넌트:** `<pulse-app>`, `<pulse-editor>`, `<pulse-feed>`, `<match-view>`.
+- **모던 CSS:** Cascade Layers (`@layer`), `oklch`, Glassmorphism, Noto Sans KR 폰트.
+- **바닐라 자바스크립트:** ES 모듈, 커스텀 이벤트, `localStorage`.
 
-## Implementation Plan
-1. **Infrastructure:** Define "Pulse & Glow" palette and layout layers.
-2. **Web Components:**
-   - `<pulse-editor>`: 100-char input with dynamic tag picker.
-   - `<pulse-feed>`: Feed display with reverse chronological ordering.
-   - `<match-view>`: Simulated matching logic for user connection.
-3. **Core Logic:** `PulseStore` for managing posts, tags, and state.
-4. **Polishing:** Neon entry animations and mobile responsive layout.
-5. **Validation:** Verify 100-char enforcement and tag-based matching.
+## 구현 계획
+1. **인프라:** "Neon & Dark Pulse" 색상 팔레트 및 Noto Sans KR 폰트 설정.
+2. **웹 컴포넌트:**
+   - `<pulse-editor>`: 한글 100자 입력창, 실시간 글자수 카운터, 태그 선택기.
+   - `<pulse-feed>`: 피드 정렬 및 한국어 시간 표시 로직.
+   - `<match-view>`: 관심사 기반 사용자 매칭 레이아웃.
+3. **핵심 로직:** `PulseStore`를 통한 한국어 태그 관리 및 매칭 시스템 구현.
+4. **폴리싱:** 네온 엔트리 애니메이션, 모바일 반응성 최적화.
+5. **검증:** 한글 100자 제한 및 관심사 매칭 기능 테스트.
